@@ -1,0 +1,46 @@
+version: '2'
+services:
+  # MySQL
+  mysqld:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    volumes:
+      - $${DB_WORKDIR}/conf:/etc/mysql/conf.d
+      - $${DB_WORKDIR}/data:/var/lib/mysql
+      - $${DB_WORKDIR}/init.d:/docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hiromaily
+      MYSQL_USER: hiromaily
+      MYSQL_PASSWORD: 12345678
+  # Redis
+  redisd:
+    image: redis:3.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - $${REDIS_WORKDIR}/data:/data
+    command: redis-server --requirepass password --appendonly yes
+  # golang:go-book-teacher
+  book:
+    depends_on:
+      - redisd
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REDIS_HOST_NAME: $${REDIS_HOST_NAME}
+        MAIL_TO_ADDRESS: $${MAIL_TO_ADDRESS}
+        MAIL_FROM_ADDRESS: $${MAIL_FROM_ADDRESS}
+        SMTP_ADDRESS: $${SMTP_ADDRESS}
+        SMTP_PASS: $${SMTP_PASS}
+        SMTP_SERVER: $${SMTP_SERVER}
+        SMTP_PORT: $${SMTP_PORT}
+    links:
+      - redisd:$${REDIS_HOST_NAME}
+    restart: always
+    volumes_from:
+      - mysqld
+      - redisd
