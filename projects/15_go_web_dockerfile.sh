@@ -1,24 +1,26 @@
 #!/bin/sh
 
 ###############################################################################
-# Using Dockerfile for go-book-teacher repo
+# Using Dockerfile for go-gin-wrapper repo
 ###############################################################################
 
 ###############################################################################
 # Environment
 ###############################################################################
-CONTAINER_NAME=book
-IMAGE_NAME=go-book-teacher:v1.0
+CONTAINER_NAME=web
+IMAGE_NAME=go-gin-wrapper:v1.0
 
-GITDIR=${PWD}/golang/book/docker_build/go-book-teacher
+GITDIR=${PWD}/golang/web/docker_build/go-gin-wrapper
+LOGDIR=${PWD}/golang/web/logs
 
 REDIS_HOST_NAME=redis-server
+MYSQL_HOST_NAME=mysql-server
 
 # mode settings
 EXEC_MODE=1
 CLONE_BRANCH=0
 
-
+echo "mode is ${EXEC_MODE}"
 ###############################################################################
 # Remove Container And Image
 ###############################################################################
@@ -38,14 +40,19 @@ fi
 ###############################################################################
 if [ $CLONE_BRANCH -eq 1 ]; then
     rm -rf ${GITDIR}
-    pushd ./golang/book/docker_build/
-    git clone git@github.com:hiromaily/go-book-teacher.git
+    pushd ./golang/${CONTAINER_NAME}/docker_build/
+    git clone git@github.com:hiromaily/go-gin-wrapper.git
     EXIT_STATUS=$?
 
     if [ $EXIT_STATUS -gt 0 ]; then
         exit $EXIT_STATUS
     fi
 
+    popd
+else
+    pushd ./golang/${CONTAINER_NAME}/docker_build/go-gin-wrapper/
+    git fetch origin
+    git reset --hard origin/master
     popd
 fi
 
@@ -54,8 +61,8 @@ fi
 # Create image (use Dockerfile)
 ###############################################################################
 docker build -t ${IMAGE_NAME} \
---build-arg testValue1=aaaaa \
 --build-arg redisHostName=${REDIS_HOST_NAME} \
+--build-arg mysqlHostName=${MYSQL_HOST_NAME} \
 ./golang/${CONTAINER_NAME}/docker_build
 
 EXIT_STATUS=$?
@@ -64,20 +71,25 @@ if [ $EXIT_STATUS -gt 0 ]; then
     exit $EXIT_STATUS
 fi
 
-
 ###############################################################################
 # Create container
 ###############################################################################
 docker run -it --name ${CONTAINER_NAME} \
---link redisd:${REDIS_HOST_NAME} \
---env-file ./golang/${CONTAINER_NAME}/docker_build/.env \
-${IMAGE_NAME}
+--link redisd:redis-server \
+--link mysqld:mysql-server \
+--expose 9999 \
+-p 9999:9999 \
+-v ${LOGDIR}:/var/log/goweb \
+-d ${IMAGE_NAME} bash
 
 
 ###############################################################################
 # Execute
 ###############################################################################
-#docker start -a book
+#docker start -a web
 #-> It's enough to enter to container.
 
-#docker exec -it book bash
+#docker exec -it web bash
+
+#Access by browser
+#http://docker.hiromaily.com:9999/

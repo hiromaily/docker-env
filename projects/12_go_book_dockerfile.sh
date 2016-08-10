@@ -1,28 +1,24 @@
 #!/bin/sh
 
 ###############################################################################
-# Using docker-composer for go-gin-wrapper
+# Using Dockerfile for go-book-teacher repo
 ###############################################################################
 
 ###############################################################################
 # Environment
 ###############################################################################
-CONTAINER_NAME=web
-IMAGE_NAME=go-gin-wrapper:v1.0
-#IMAGE_NAME=dockerbuild_web
-GITDIR=${PWD}/golang/web/docker_build/go-gin-wrapper
+CONTAINER_NAME=book
+IMAGE_NAME=go-book-teacher:v1.0
 
-#export DB_WORKDIR=${PWD}/mysql
-#export REDIS_WORKDIR=${PWD}/golang/web/redis_data
-#export REDIS_HOST_NAME=redis-server
+GITDIR=${PWD}/golang/book/docker_build/go-book-teacher
 
-COMPOSE_FILE=./golang/${CONTAINER_NAME}/docker_build/docker-compose.yml
+REDIS_HOST_NAME=redis-server
 
 # mode settings
 EXEC_MODE=1
 CLONE_BRANCH=0
 
-echo "mode is ${EXEC_MODE}"
+
 ###############################################################################
 # Remove Container And Image
 ###############################################################################
@@ -43,7 +39,7 @@ fi
 if [ $CLONE_BRANCH -eq 1 ]; then
     rm -rf ${GITDIR}
     pushd ./golang/${CONTAINER_NAME}/docker_build/
-    git clone git@github.com:hiromaily/go-gin-wrapper.git
+    git clone git@github.com:hiromaily/go-book-teacher.git
     EXIT_STATUS=$?
 
     if [ $EXIT_STATUS -gt 0 ]; then
@@ -51,48 +47,42 @@ if [ $CLONE_BRANCH -eq 1 ]; then
     fi
 
     popd
+else
+    pushd ./golang/${CONTAINER_NAME}/docker_build/go-book-teacher/
+    git fetch origin
+    git reset --hard origin/master
+    popd
 fi
 
 
 ###############################################################################
-# Docker-compose / build and up
+# Create image (use Dockerfile)
 ###############################################################################
-#docker-compose -f ${COMPOSE_FILE} up --build -d
+docker build -t ${IMAGE_NAME} \
+--build-arg testValue1=aaaaa \
+--build-arg redisHostName=${REDIS_HOST_NAME} \
+./golang/${CONTAINER_NAME}/docker_build
 
-docker-compose -f ${COMPOSE_FILE} build
-#docker-compose -f ${COMPOSE_FILE} up -d redisd
-#docker-compose -f ${COMPOSE_FILE} up -d mysql
-#docker-compose -f ${COMPOSE_FILE} up -d web
-docker-compose -f ${COMPOSE_FILE} up -d
-
-
-###############################################################################
-# Exec
-###############################################################################
-#docker exec -it web bash
+EXIT_STATUS=$?
+if [ $EXIT_STATUS -gt 0 ]; then
+    docker rmi $(docker images -f "dangling=true" -q)
+    exit $EXIT_STATUS
+fi
 
 
 ###############################################################################
-# Docker-compose / down
+# Create container
 ###############################################################################
-#docker-compose -f ${COMPOSE_FILE} down
-
-
-###############################################################################
-# Docker-compose / check
-###############################################################################
-docker-compose -f ${COMPOSE_FILE} ps
-docker-compose -f ${COMPOSE_FILE} logs
-
-#docker-compose -f ./golang/web/docker_build/docker-compose.yml ps
-
-#WARNING: The REDIS_WORKDIR variable is not set. Defaulting to a blank string.
-#WARNING: The DB_WORKDIR variable is not set. Defaulting to a blank string.
+docker run -it --name ${CONTAINER_NAME} \
+--link redisd:${REDIS_HOST_NAME} \
+--env-file ./golang/${CONTAINER_NAME}/docker_build/.env \
+${IMAGE_NAME}
 
 
 ###############################################################################
-# Exec
+# Execute
 ###############################################################################
-#docker start -a web
-#docker exec -it web bash
+#docker start -a book
+#-> It's enough to enter to container.
 
+#docker exec -it book bash

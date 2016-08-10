@@ -77,9 +77,5 @@ docker run -it --name ${CONTAINER_NAME} \
 ###############################################################################
 # Execute
 ###############################################################################
-#docker rm -f pybook
-#docker run -it --name pybook -d py-book-teacher:v1.0
 docker exec -it pybook bash
 #-> python ./book.py
-
-#docker exec -it pybook bash python ./book.py

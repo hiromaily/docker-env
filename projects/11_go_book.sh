@@ -32,7 +32,7 @@ fi
 ###############################################################################
 if [ $CLONE_BRANCH -eq 1 ]; then
     rm -rf ${GITDIR}
-    pushd ./golang/book/docker_build/
+    pushd ./golang/${CONTAINER_NAME}/docker_build/
     git clone git@github.com:hiromaily/go-book-teacher.git
     EXIT_STATUS=$?
 
@@ -40,6 +40,11 @@ if [ $CLONE_BRANCH -eq 1 ]; then
         exit $EXIT_STATUS
     fi
 
+    popd
+else
+    pushd ./golang/${CONTAINER_NAME}/docker_build/go-book-teacher/
+    git fetch origin
+    git reset --hard origin/master
     popd
 fi
 

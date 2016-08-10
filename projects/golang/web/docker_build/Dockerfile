@@ -10,7 +10,6 @@ ARG mysqlHostName=default-mysql-server
 COPY ./go-gin-wrapper /go/src/github.com/hiromaily/go-gin-wrapper/
 RUN mkdir /var/log/goweb/
 
-ENV HEROKU_FLG=1
 ENV REDIS_URL=redis://h:password@${redisHostName}:6379
 ENV CLEARDB_DATABASE_URL=mysql://hiromaily:12345678@mysql-server/hiromaily?reconnect=true
 

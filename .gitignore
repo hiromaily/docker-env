@@ -6,6 +6,11 @@ projects/share
 projects/ubuntu
 projects/python2
 #projects/python3
+projects/python3/pybook/docker_build/config.ini
+projects/python3/pybook/docker_build/py-book-teacher
+projects/python3/django/docker_build/proj01
+projects/python3/django/docker_build/db.sqlite3
+projects/python3/django/db_data/*
 projects/mysql/.env
 projects/mysql/data/*
 projects/mysql/dockerfiles
@@ -21,4 +26,7 @@ projects/golang/web/docker_build/.env
 projects/golang/web/redis_data/
 projects/golang/web/db_data/
 projects/golang/web/logs/
+projects/nginx/content
+projects/nginx/docker_build/*.bk
+projects/golang/webtest/docker_build/go-server
 test.sh

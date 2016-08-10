@@ -20,7 +20,7 @@ WORKDIR=${PWD}/mysql
 
 # Create Container
 docker run --name mysqld \
--p 3306:3306 \
+-p 13306:3306 \
 -v ${WORKDIR}/conf:/etc/mysql/conf.d \
 -v ${WORKDIR}/data:/var/lib/mysql \
 -v ${WORKDIR}/init.d:/docker-entrypoint-initdb.d \
@@ -33,7 +33,7 @@ docker run --name mysqld \
 #--env-file  ${WORKDIR}/.env \
 
 # Check connection
-#mysql -u root -p -h 127.0.0.1 -P 3306
+#mysql -u root -p -h 127.0.0.1 -P 13306
 
 
 #ERROR 2003 (HY000): Can't connect to MySQL server on '127.0.0.1' (61)
@@ -60,10 +60,10 @@ REDIS_PASS=password
 
 # Create Container
 docker run --name redisd \
--p 6379:6379 \
+-p 16379:6379 \
 -v ${WORKDIR}/data:/data \
 -d redis:3.2 \
 redis-server --requirepass ${REDIS_PASS} --appendonly yes
 
 #Check
-#redis-cli -h 127.0.0.1 -p 6379 -a password
+#redis-cli -h 127.0.0.1 -p 16379 -a password

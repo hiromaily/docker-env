@@ -1,4 +1,5 @@
 #docker-compose.yml
+#- nginx:1.10-alpine
 #- mysql:5.7
 #- redis:3.2
 #- web from Dockerfile of web (build is required)
@@ -10,7 +11,7 @@ services:
     image: mysql:5.7
     container_name: mysqld
     ports:
-      - "13306:3306"
+      - "3306:3306"
     volumes:
       - /Users/hy/work/docker-env/projects/mysql/conf:/etc/mysql/conf.d
       - /Users/hy/work/docker-env/projects/golang/web/db_data:/var/lib/mysql
@@ -26,7 +27,7 @@ services:
     image: redis:3.2
     container_name: redisd
     ports:
-      - "16379:6379"
+      - "6379:6379"
     volumes:
       - /Users/hy/work/docker-env/projects/golang/web/redis_data:/data
     restart: always
@@ -50,6 +51,7 @@ services:
     links:
       - mysqld:mysql-server
       - redisd:redis-server
+      #- nginxs:proxy-server
     depends_on:
       - mysqld
       - redisd
@@ -57,3 +59,16 @@ services:
     tty: true
     restart: always
     command: bash
+  # Nginx
+  nginxs:
+    build:
+      context: /Users/hy/work/docker-env/projects/nginx/docker_build/
+    image: nginxs:v1.0
+    container_name: nginxs
+    ports:
+      - "8080:80"
+    links:
+      - web:go-server
+    depends_on:
+      - web
+    restart: always

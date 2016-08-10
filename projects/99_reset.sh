@@ -21,7 +21,12 @@ docker ps -a
 docker rmi -f dockerbuild_book
 docker rmi -f dockerbuild_web
 docker rmi -f go-gin-wrapper:v1.0
+docker rmi -f go-gin-wrapper:v1.1
 docker rmi -f go-book-teacher:v1.0
+docker rmi -f go-book-teacher:v1.1
+docker rmi -f py-book-teacher:v1.0
+docker rmi -f py-book-teacher:v1.1
+docker rmi -f nginxs:v1.0
 
 docker rmi $(docker images -f "dangling=true" -q)
 

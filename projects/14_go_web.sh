@@ -42,6 +42,11 @@ if [ $CLONE_BRANCH -eq 1 ]; then
     fi
 
     popd
+else
+    pushd ./golang/${CONTAINER_NAME}/docker_build/go-gin-wrapper/
+    git fetch origin
+    git reset --hard origin/master
+    popd
 fi
 
 
@@ -59,7 +64,6 @@ if [ $EXEC_MODE -eq 1 ]; then
     -v ${GITDIR}:${WORKDIR} \
     -v ${LOGDIR}:/var/log/goweb/ \
     -w ${WORKDIR} \
-    -e "HEROKU_FLG=1" \
     -e "CLEARDB_DATABASE_URL=mysql://hiromaily:12345678@mysql-server/hiromaily?reconnect=true" \
     -e "REDIS_URL=redis://h:password@redis-server:6379" \
     golang:1.6 bash
@@ -74,7 +78,6 @@ elif [ $EXEC_MODE -eq 2 ]; then
     -v ${GITDIR}:${WORKDIR} \
     -v ${LOGDIR}:/var/log/goweb/ \
     -w ${WORKDIR} \
-    -e "HEROKU_FLG=1" \
     -e "CLEARDB_DATABASE_URL=mysql://hiromaily:12345678@mysql-server/hiromaily?reconnect=true" \
     -e "REDIS_URL=redis://h:password@redis-server:6379" \
     -d golang:1.6 bash
@@ -98,7 +101,6 @@ elif [ $EXEC_MODE -eq 3 ]; then
     -v ${GITDIR}:${WORKDIR} \
     -v ${LOGDIR}:/var/log/goweb/ \
     -w ${WORKDIR} \
-    -e "HEROKU_FLG=1" \
     -e "CLEARDB_DATABASE_URL=mysql://hiromaily:12345678@mysql-server/hiromaily?reconnect=true" \
     -e "REDIS_URL=redis://h:password@redis-server:6379" \
     -d golang:1.6 bash ${WORKDIR}/docker-entrypoint.sh
@@ -118,7 +120,6 @@ elif [ $EXEC_MODE -eq 4 ]; then
     -v ${GITDIR}:${WORKDIR} \
     -v ${LOGDIR}:/var/log/goweb/ \
     -w ${WORKDIR} \
-    -e "HEROKU_FLG=1" \
     -e "CLEARDB_DATABASE_URL=mysql://hiromaily:12345678@mysql-server/hiromaily?reconnect=true" \
     -e "REDIS_URL=redis://h:password@redis-server:6379" \
     -d golang:1.6 bash ${WORKDIR}/docker-entrypoint.sh

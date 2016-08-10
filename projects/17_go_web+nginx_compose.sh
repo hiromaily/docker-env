@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ###############################################################################
-# Using Dockerfile for go-gin-wrapper repo
+# Using docker-composer for go-gin-wrapper
 ###############################################################################
 
 ###############################################################################
@@ -9,29 +9,37 @@
 ###############################################################################
 CONTAINER_NAME=web
 IMAGE_NAME=go-gin-wrapper:v1.0
-
+IMAGE_NAME2=nginxs:v1.0
+#IMAGE_NAME=dockerbuild_web
 GITDIR=${PWD}/golang/web/docker_build/go-gin-wrapper
-LOGDIR=${PWD}/golang/web/logs
 
-REDIS_HOST_NAME=redis-server
-MYSQL_HOST_NAME=mysql-server
+#export DB_WORKDIR=${PWD}/mysql
+#export REDIS_WORKDIR=${PWD}/golang/web/redis_data
+#export REDIS_HOST_NAME=redis-server
+
+COMPOSE_FILE=./golang/${CONTAINER_NAME}/docker_build/docker-compose2.yml
 
 # mode settings
 EXEC_MODE=1
+DELETE_IMAGE=1
 CLONE_BRANCH=0
 
 echo "mode is ${EXEC_MODE}"
 ###############################################################################
 # Remove Container And Image
 ###############################################################################
-DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
-if [ ${#DOCKER_PSID} -ne 0 ]; then
-    docker rm -f ${CONTAINER_NAME}
-fi
+docker rm -f $(docker ps -aq)
 
-DOCKER_IMGID=`docker images "${IMAGE_NAME}" -q`
-if [ ${#DOCKER_IMGID} -ne 0 ]; then
-    docker rmi ${IMAGE_NAME}
+if [ $DELETE_IMAGE -eq 1 ]; then
+    DOCKER_IMGID=`docker images "${IMAGE_NAME}" -q`
+    if [ ${#DOCKER_IMGID} -ne 0 ]; then
+        docker rmi ${IMAGE_NAME}
+    fi
+
+    DOCKER_IMGID=`docker images "${IMAGE_NAME2}" -q`
+    if [ ${#DOCKER_IMGID} -ne 0 ]; then
+        docker rmi ${IMAGE_NAME2}
+    fi
 fi
 
 
@@ -49,42 +57,40 @@ if [ $CLONE_BRANCH -eq 1 ]; then
     fi
 
     popd
+else
+    pushd ./golang/${CONTAINER_NAME}/docker_build/go-gin-wrapper/
+    git fetch origin
+    git reset --hard origin/master
+    popd
 fi
 
 
 ###############################################################################
-# Create image (use Dockerfile)
+# Docker-compose / build and up
 ###############################################################################
-docker build -t ${IMAGE_NAME} \
---build-arg redisHostName=${REDIS_HOST_NAME} \
---build-arg mysqlHostName=${MYSQL_HOST_NAME} \
-./golang/${CONTAINER_NAME}/docker_build
-
-EXIT_STATUS=$?
-if [ $EXIT_STATUS -gt 0 ]; then
-    docker rmi $(docker images -f "dangling=true" -q)
-    exit $EXIT_STATUS
-fi
-
-###############################################################################
-# Create container
-###############################################################################
-docker run -it --name ${CONTAINER_NAME} \
---link redisd:redis-server \
---link mysqld:mysql-server \
---expose 9999 \
--p 9999:9999 \
--v ${LOGDIR}:/var/log/goweb \
--d ${IMAGE_NAME} bash
+#docker-compose -f ${COMPOSE_FILE} up --build -d
+docker-compose -f ${COMPOSE_FILE} build
+docker-compose -f ${COMPOSE_FILE} up -d
 
 
 ###############################################################################
-# Execute
+# Docker-compose / down
 ###############################################################################
-#docker start -a web
-#-> It's enough to enter to container.
+#docker-compose -f ${COMPOSE_FILE} down
 
-#docker exec -it web bash
 
+###############################################################################
+# Docker-compose / check
+###############################################################################
+docker-compose -f ${COMPOSE_FILE} ps
+docker-compose -f ${COMPOSE_FILE} logs
+
+#docker-compose -f ./golang/web/docker_build/docker-compose2.yml logs
+#dclog nginx
+
+
+###############################################################################
+# Exec
+###############################################################################
 #Access by browser
-#http://docker.hiromaily.com:9999/
+#http://docker.hiromaily.com:8080/
