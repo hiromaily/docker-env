@@ -1,7 +1,6 @@
 .DS_Store
 .idea/
 projects/cassandra
-projects/mongo
 projects/share
 projects/ubuntu
 projects/python2

@@ -1,69 +1,162 @@
 #!/bin/sh
 
+# Environment Variable
+MYSQL_FLG=0
+REDIS_FLG=0
+MONGO_FLG=1
+MONGO2_FLG=0
+
+
 ###############################################################################
 # MySQL
 ###############################################################################
-docker pull mysql:5.7
+if [ $MYSQL_FLG -eq 1 ]; then
+    # Environment
+    IMAGE_NAME=mysql:5.7
+    CONTAINER_NAME=mysqld
+    WORKDIR=${PWD}/mysql
 
-# Remove Container
-DOCKER_PSID=`docker ps -af name=mysqld -q`
-if [ ${#DOCKER_PSID} -eq 0 ]; then
-  :
-else
-    docker rm -f mysqld
+    # Pull image
+    docker pull ${IMAGE_NAME}
+
+    # Remove Container
+    DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
+    if [ ${#DOCKER_PSID} -ne 0 ]; then
+        docker rm -f ${CONTAINER_NAME}
+    fi
+
+    # Create Container
+    docker run --name ${CONTAINER_NAME} \
+    -p 13306:3306 \
+    -v ${WORKDIR}/conf:/etc/mysql/conf.d \
+    -v ${WORKDIR}/data:/var/lib/mysql \
+    -v ${WORKDIR}/init.d:/docker-entrypoint-initdb.d \
+    -e MYSQL_DATABASE=hiromaily \
+    -e MYSQL_USER=hiromaily \
+    -e MYSQL_PASSWORD=12345678 \
+    -e MYSQL_ROOT_PASSWORD=root \
+    -d ${IMAGE_NAME}
+
+    #--env-file  ${WORKDIR}/.env \
+
+    # Check connection
+    #mysql -u root -p -h 127.0.0.1 -P 13306
+
+
+    #ERROR 2003 (HY000): Can't connect to MySQL server on '127.0.0.1' (61)
+    #->It's settled by restart docker from menu.
 fi
-
-
-# Environment
-WORKDIR=${PWD}/mysql
-
-
-# Create Container
-docker run --name mysqld \
--p 13306:3306 \
--v ${WORKDIR}/conf:/etc/mysql/conf.d \
--v ${WORKDIR}/data:/var/lib/mysql \
--v ${WORKDIR}/init.d:/docker-entrypoint-initdb.d \
--e MYSQL_DATABASE=hiromaily \
--e MYSQL_USER=hiromaily \
--e MYSQL_PASSWORD=12345678 \
--e MYSQL_ROOT_PASSWORD=root \
--d mysql:5.7
-
-#--env-file  ${WORKDIR}/.env \
-
-# Check connection
-#mysql -u root -p -h 127.0.0.1 -P 13306
-
-
-#ERROR 2003 (HY000): Can't connect to MySQL server on '127.0.0.1' (61)
-#->It's settled by restart docker from menu.
 
 ###############################################################################
 # Redis
 ###############################################################################
-docker pull redis:3.2
+if [ $REDIS_FLG -eq 1 ]; then
+    # Environment
+    IMAGE_NAME=redis:3.2
+    CONTAINER_NAME=redisd
+    WORKDIR=${PWD}/redis
+    REDIS_PASS=password
 
-# Remove Container
-DOCKER_PSID=`docker ps -af name=redisd -q`
-if [ ${#DOCKER_PSID} -eq 0 ]; then
-  :
-else
-    docker rm -f redisd
+
+    # Pull image
+    docker pull ${IMAGE_NAME}
+
+    # Remove Container
+    DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
+    if [ ${#DOCKER_PSID} -ne 0 ]; then
+        docker rm -f ${CONTAINER_NAME}
+    fi
+
+
+    # Create Container
+    docker run --name ${CONTAINER_NAME} \
+    -p 16379:6379 \
+    -v ${WORKDIR}/data:/data \
+    -d ${IMAGE_NAME} \
+    redis-server --requirepass ${REDIS_PASS} --appendonly yes
+
+    #Check
+    #redis-cli -h 127.0.0.1 -p 16379 -a password
 fi
 
+###############################################################################
+# MongoDB
+###############################################################################
+if [ $MONGO_FLG -eq 1 ]; then
+    # Environment
+    IMAGE_NAME=mongo:3.3
+    CONTAINER_NAME=mongod
+    WORKDIR=${PWD}/mongo
+    MONGO_PASS=password
+    NUM_CONTAINER=1
+    PORT=27017
 
-# Environment
-WORKDIR=${PWD}/redis
-REDIS_PASS=password
+    # Pull image
+    docker pull ${IMAGE_NAME}
+
+    # Remove Container
+    DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
+    if [ ${#DOCKER_PSID} -ne 0 ]; then
+        docker rm -f ${CONTAINER_NAME}
+    fi
+
+    # Create Container (default port is 27017)
+    docker run --name ${CONTAINER_NAME} \
+    -p ${PORT}:27017 \
+    -d ${IMAGE_NAME}
+    #-v ${WORKDIR}/data:/data/db \
+    #-d ${IMAGE_NAME} --auth
+
+    # Another One
+    #docker run --name ${CONTAINER_NAME}2 \
+    #-p 27018:27017 \
+    #-d ${IMAGE_NAME} --auth
+
+    #1. Initial Settings
+    sleep 2s
+    mongo 127.0.0.1:${PORT}/admin --eval "var port = ${PORT};" ${WORKDIR}/init.js
+    #mongo 127.0.0.1:27017/admin ./mongo/create.js
+    #mongo 127.0.0.1:27017/hiromaily -u hiromaily -p 12345678 ./mongo/hiromaily.js
+fi
+###### TEST ######
+if [ $MONGO2_FLG -eq 1 ]; then
+    # Environment
+    IMAGE_NAME=mongo:3.3
+    CONTAINER_NAME=mongod2
+    WORKDIR=${PWD}/mongo
+    MONGO_PASS=password
+    NUM_CONTAINER=1
+    PORT=27018
+
+    # Pull image
+    docker pull ${IMAGE_NAME}
+
+    # Remove Container
+    DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
+    if [ ${#DOCKER_PSID} -ne 0 ]; then
+        docker rm -f ${CONTAINER_NAME}
+    fi
+
+    # Create Container (default port is 27017)
+    docker run --name ${CONTAINER_NAME} \
+    -p ${PORT}:27017 \
+    -d ${IMAGE_NAME}
 
 
-# Create Container
-docker run --name redisd \
--p 16379:6379 \
--v ${WORKDIR}/data:/data \
--d redis:3.2 \
-redis-server --requirepass ${REDIS_PASS} --appendonly yes
+    #1. Initial Settings
+    sleep 2s
+    mongo 127.0.0.1:${PORT}/admin --eval "var port = ${PORT};" ${WORKDIR}/init.js
+    #mongo 127.0.0.1:27018/admin --eval "var port = 27018;" ./mongo/init.js
+fi
 
-#Check
-#redis-cli -h 127.0.0.1 -p 16379 -a password
+# Check connection
+#docker exec -it mongod mongo admin
+
+#mongo admin --port 27017 --host 127.0.0.1
+
+#mongo 127.0.0.1:27017/hiromaily -u hiromaily -p 12345678
+#mongo 127.0.0.1:27017/hiromaily -u hiromaily -p 12345678 ./mongo/hiromaily.js
+
+###############################################################################
+
+docker ps -a
