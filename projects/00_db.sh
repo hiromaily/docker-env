@@ -3,8 +3,8 @@
 # Environment Variable
 MYSQL_FLG=0
 REDIS_FLG=0
-MONGO_FLG=1
-MONGO2_FLG=0
+MONGO_FLG=0
+MONGO2_FLG=1
 
 
 ###############################################################################
@@ -156,6 +156,16 @@ fi
 
 #mongo 127.0.0.1:27017/hiromaily -u hiromaily -p 12345678
 #mongo 127.0.0.1:27017/hiromaily -u hiromaily -p 12345678 ./mongo/hiromaily.js
+
+# Export json from mongo collection
+#mongoexport -h 127.0.0.1:27017 --db hiromaily -c articles --out articles.json
+#mongoexport -h 127.0.0.1:27017 --db hiromaily -c articles2 --out articles2.json
+
+# Dump
+#mongodump -h 127.0.0.1:27017 --db hiromaily --out dump
+
+# Restore
+#mongorestore -h 127.0.0.1:27017 --db hiromaily dump/hiromaily
 
 ###############################################################################
 

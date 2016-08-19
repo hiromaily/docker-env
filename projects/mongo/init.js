@@ -65,7 +65,9 @@ function insertNews(){
     //remove
     db.news.remove({});
 
+    //date (-1 day)
     var date = new Date();
+    date.setDate(date.getDate() - 1);
 
     //insert
     db.news.insert({
