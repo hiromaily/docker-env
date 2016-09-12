@@ -5,6 +5,7 @@ MYSQL_FLG=0
 REDIS_FLG=0
 MONGO_FLG=0
 MONGO2_FLG=0
+CASSANDRA_FLG=1
 
 ###############################################################################
 # MySQL
@@ -167,3 +168,59 @@ fi
 #mongorestore -h 127.0.0.1:27017 --db hiromaily dump/hiromaily
 
 ###############################################################################
+
+
+###############################################################################
+# Cassandra
+###############################################################################
+if [ $CASSANDRA_FLG -eq 1 ]; then
+    # Environment
+    IMAGE_NAME=cassandra:3.7
+    CONTAINER_NAME=cassandra
+    WORKDIR=${PWD}/cassandra
+
+    # Pull image
+    docker pull ${IMAGE_NAME}
+
+    # Remove Container
+    DOCKER_PSID=`docker ps -af name="${CONTAINER_NAME}" -q`
+    if [ ${#DOCKER_PSID} -ne 0 ]; then
+        docker rm -f ${CONTAINER_NAME}
+    fi
+
+
+    # Create Container
+    docker run --name ${CONTAINER_NAME} \
+    -p 9042:9042 \
+    -d ${IMAGE_NAME}
+    #-v ${WORKDIR}/data:/var/lib/cassandra \
+
+    #7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp
+
+    # Create Key Space
+    #docker exec -it ${CONTAINER_NAME} bash ${WORKDIR}/docker-entrypoint.sh
+    docker exec -it cassandra sh -c 'mkdir hy'
+    docker cp ${WORKDIR}/init.sh cassandra:/hy/
+    docker cp ${WORKDIR}/init.sql cassandra:/hy/
+
+    #for i in {0..5}; do
+    #    sleep 1s
+    #    docker exec -it cassandra bash /hy/init.sh
+    #    EXIT_STATUS=$?
+    #    if [ $EXIT_STATUS -gt 0 ]; then
+    #        echo 'error'
+    #    else
+    #        echo 'done!'
+    #        break
+    #    fi
+    #    #echo $i
+    #done
+
+    #$CASSANDRA_PORT_9042_TCP_ADDR
+
+    #Connection error: ('Unable to connect to any servers',
+    # {'127.0.0.1': error(111, "Tried connecting to [('127.0.0.1', 9042)].
+    # Last error: Connection refused")})
+
+    #docker exec -it cassandra bash
+fi

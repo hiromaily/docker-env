@@ -2,8 +2,8 @@
 
 # Environment Variable
 NATS_FLG=1
-KAFKA_FLG=0
-RMQ_FLG=0
+KAFKA_FLG=1
+RMQ_FLG=1
 
 
 ###############################################################################
